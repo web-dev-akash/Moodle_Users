@@ -78,7 +78,8 @@ const getUserData = async (email) => {
 app.post("/getCredentials", authMiddleware, async (req, res) => {
   try {
     const { email } = req.body;
-    const data = await getUserData(email);
+    newemail = email.toLowerCase();
+    const data = await getUserData(newemail);
     return res.status(200).send({
       data,
     });
