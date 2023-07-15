@@ -28,23 +28,26 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-const conn = mysql.createConnection({
-  host: DB_HOST,
-  port: DB_PORT,
-  user: DB_USER,
-  password: DB_PASSWORD,
-  database: DB_DATABASE,
-});
+const connectToDatabase = async () => {
+  const conn = mysql.createConnection({
+    host: DB_HOST,
+    port: DB_PORT,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_DATABASE,
+  });
 
-conn.connect(function (err) {
-  if (err) {
-    console.log(err);
-  } else {
-    console.log("Connected with the Database Successfully");
-  }
-});
+  conn.connect(function (err) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Connected with the Database Successfully");
+    }
+  });
+  return conn;
+};
 
-const fetchData = (email) => {
+const fetchData = (email, conn) => {
   return new Promise((resolve, reject) => {
     finalData = {};
     conn.query("SELECT email, real_password from mdl_user", (err, results) => {
@@ -65,9 +68,9 @@ const fetchData = (email) => {
   });
 };
 
-const getUserData = async (email) => {
+const getUserData = async (email, conn) => {
   try {
-    const data = await fetchData(email);
+    const data = await fetchData(email, conn);
     return data;
   } catch (error) {
     console.log(error);
@@ -77,9 +80,10 @@ const getUserData = async (email) => {
 
 app.post("/getCredentials", authMiddleware, async (req, res) => {
   try {
+    const conn = await connectToDatabase();
     const { email } = req.body;
     newemail = email.toLowerCase();
-    const data = await getUserData(newemail);
+    const data = await getUserData(newemail, conn);
     return res.status(200).send({
       data,
     });
